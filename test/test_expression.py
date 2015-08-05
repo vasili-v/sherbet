@@ -231,7 +231,7 @@ class TestExpression(unittest.TestCase):
         expressions['y'].substitute(sequence)
         self.assertEqual(sequence, ['1', 'test', '1', 'test'])
 
-test_suite = unittest.TestSuite((TestExpression('test_expression_init'),))
+test_suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestExpression)
 
 if __name__ == '__main__':
     unittest.main()

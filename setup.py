@@ -15,5 +15,5 @@ setup(
                        "returns \"5 files have been deleted\".",
     platforms = ["Darwin", "Linux"],
     py_modules = ['sherbet'],
-    test_suite = "test.all"
+    test_suite = "test"
 )

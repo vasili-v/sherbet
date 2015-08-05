@@ -108,7 +108,7 @@ class TestSherbet(unittest.TestCase):
         self.assertEqual(sweeten('Found {x} file{x_plural}.', x=5),
                          'Found 5 files.')
 
-test_suite = unittest.TestSuite((TestSherbet('test__parse_format'),))
+test_suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestSherbet)
 
 if __name__ == '__main__':
     unittest.main()
