@@ -18,12 +18,10 @@ def _parse_expression(expression):
     return expression, ['s']
 
 class _Expression(object):
-    def __init__(self, expression, index, format_spec, conversion, args, kwargs):
+    def __init__(self, expression, args, kwargs):
         self.expression = expression
 
         self.positions = {}
-        self.add_position(index, format_spec, conversion)
-
         try:
             value, name = _formatter.get_field(expression, args, kwargs)
         except:
@@ -78,13 +76,8 @@ class _Expression(object):
         except:
             return self.restore_field(index)
 
-    def format_list(self, value, index):
-        format_spec, conversion = self.positions[index]
-        if conversion == 'r':
-            return self.format_standard(value, index)
-        else:
-            conversion = 's'
-
+    @staticmethod
+    def convert_list(value, conversion):
         value = tuple(value)
         last = _formatter.convert_field(value[-1], conversion)
 
@@ -94,30 +87,42 @@ class _Expression(object):
                 item = _formatter.convert_field(item, conversion)
                 other.append(item)
 
-            value = '"' + '", "'.join(other) + '" and "' + last + '"'
-        else:
-            value = last
+            return '"' + '", "'.join(other) + '" and "' + last + '"'
 
+        return last
+
+    def format_list(self, value, index):
+        format_spec, conversion = self.positions[index]
+        if conversion == 'r':
+            return self.format_standard(value, index)
+
+        conversion = 's'
+
+        value = self.convert_list(value, conversion)
         try:
             return _formatter.format_field(value, format_spec)
         except:
             return self.restore_field(index)
 
+    @staticmethod
+    def get_number(value):
+        if isinstance(value, (tuple, set, list)):
+            return len(value)
+
+        return value
+
+    def get_option(self, number):
+        options = self.plural_options
+        if number == 1:
+            return options[1] if len(options) > 1 else ''
+
+        return options[0]
+
     def format_plural(self, index):
         format_spec, conversion = self.positions[index]
-        if isinstance(self.plural_subject.value, (tuple, set, list)):
-            number = len(self.plural_subject.value)
-        else:
-            number = self.plural_subject.value
 
-        if number != 1:
-            value = self.plural_options[0]
-        else:
-            if len(self.plural_options) > 1:
-                value = self.plural_options[1]
-            else:
-                value = ''
-
+        number = self.get_number(self.plural_subject.value)
+        value = self.get_option(number)
         try:
             return _formatter.format_field(value, format_spec)
         except:
@@ -140,6 +145,19 @@ class _Expression(object):
         for index in self.positions:
             sequence[index] = self.format_field(index)
 
+def _append_literal(sequence, literal):
+    if literal:
+        sequence.append(literal)
+
+def _append_expression(sequence, expressions, expression, args, kwargs,
+                       format_spec, conversion):
+    sequence.append(None)
+    index = len(sequence) - 1
+
+    if expression not in expressions:
+        expressions[expression] = _Expression(expression, args, kwargs)
+    expressions[expression].add_position(index, format_spec, conversion)
+
 def _parse_format(string, args, kwargs):
     sequence = []
     expressions = {}
@@ -147,20 +165,15 @@ def _parse_format(string, args, kwargs):
     current = 0
     for field in _formatter.parse(string):
         literal, expression, format_spec, conversion = field
-        if literal:
-            sequence.append(literal)
+        _append_literal(sequence, literal)
 
         if isinstance(expression, types.StringTypes):
             if not expression:
                 expression = str(current)
                 current += 1
 
-            sequence.append(None)
-            index = len(sequence) - 1
-            if expression in expressions:
-                expressions[expression].add_position(index, format_spec, conversion)
-            else:
-                expressions[expression] = _Expression(expression, index, format_spec, conversion, args, kwargs)
+            _append_expression(sequence, expressions, expression, args, kwargs,
+                               format_spec, conversion)
 
     return sequence, expressions
 
