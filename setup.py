@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "Sherbet",
-    version = "0.1",
+    version = "0.1.1",
     description = "Sherbet library automates word inflection to support plurals",
     url = "https://github.com/vasili-v/sherbet",
     author = "Vasili Vasilyeu",
