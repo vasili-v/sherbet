@@ -15,9 +15,9 @@ Default substitution:
 Simple substitution for plural:
 ```python
 >>> sherbet.sweeten("{x} box{x_plural<es>}.", x=1)
-"1 file."
+"1 box."
 >>> sherbet.sweeten("{x} box{x_plural<es>}.", x=5)
-"5 files."
+"5 boxes."
 ```
 
 Alternative substitution:
